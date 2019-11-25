@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'dart:html' as html;
 
+import 'canvas_to_image_web.dart';
 import 'color_selector.dart';
 import 'controller.dart';
 
 class Appbar extends StatelessWidget {
   final GraphController controller;
 
-  const Appbar({Key key, this.controller}) : super(key: key);
+  final ImageExporterWeb exporter;
+
+  const Appbar({Key key, this.controller})
+      : exporter = const ImageExporterWeb(),
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -49,11 +54,10 @@ class Appbar extends StatelessWidget {
               child: IconButton(
                 icon: Icon(Icons.file_download, color: Colors.yellow),
                 onPressed: () {
-                  final color = Colors.grey.shade900.value
-                      .toRadixString(16)
-                      .padLeft(6, '0')
-                      .substring(2);
-                  return controller.canvasToImage('#$color');
+                  return exporter.saveImage(
+                    controller.polygons,
+                    Colors.grey.shade900,
+                  );
                 },
               ),
             ),
@@ -63,8 +67,14 @@ class Appbar extends StatelessWidget {
                 hoverColor: Colors.white,
                 child: Container(
                   padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.grey.shade700,),
-                  child: Image.asset('github.png', width: 24,),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey.shade700,
+                  ),
+                  child: Image.asset(
+                    'github.png',
+                    width: 24,
+                  ),
                 ),
                 onTap: () => html.window
                     .open('http://github.com/rxlabz/algrafx', '_blank'),

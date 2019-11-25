@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
 
@@ -52,32 +51,32 @@ class Line {
 }
 
 class Polygon {
-  final List<Node> circles;
-  final double dist;
+  final List<Node> nodes;
+  final double distance;
 
   final List<Offset> previousPoints;
 
   final Color color;
 
   List<Offset> get points {
-    final width = Offset(0, 30) * dist / 100;
-    final c0 = circles.first.offset - width;
-    final c1 = circles.last.offset - width;
-    final c2 = circles.last.offset + width;
-    final c3 = circles.first.offset + width;
+    final width = Offset(0, 30) * distance / 100;
+    final c0 = nodes.first.offset - width;
+    final c1 = nodes.last.offset - width;
+    final c2 = nodes.last.offset + width;
+    final c3 = nodes.first.offset + width;
     return [c0, c1, c2, c3];
   }
 
-  Polygon(this.circles, {this.previousPoints, this.color})
-      : dist = (circles.first.offset - circles.last.offset).distance;
+  Polygon(this.nodes, {this.previousPoints, this.color})
+      : distance = (nodes.first.offset - nodes.last.offset).distance;
 
   void draw(Canvas canvas) {
-    final width = Offset(0, 30) * dist / 100;
+    final width = Offset(0, 30) * distance / 100;
 
     final paint = Paint()..color = color;
     final c0 = previousPoints.first;
-    final c1 = circles.last.offset - width;
-    final c2 = circles.last.offset + width;
+    final c1 = nodes.last.offset - width;
+    final c2 = nodes.last.offset + width;
     final c3 = previousPoints.last;
 
     final path = Path()
@@ -92,30 +91,5 @@ class Polygon {
         Paint()
           ..style = PaintingStyle.stroke
           ..color = Color(0x88000000));
-  }
-
-  void drawWeb(html.CanvasElement canvas) {
-    final rubanWidth = Offset(0, 30) * dist / 100;
-
-    final c0 =
-        previousPoints.first; // last point topRight from previous polygon
-    final c1 = circles.last.offset - rubanWidth;
-    final c2 = circles.last.offset + rubanWidth;
-    final c3 =
-        previousPoints.last; // last point bottomRight from previous polygon
-
-    canvas.context2D
-      ..beginPath()
-      ..fillStyle =
-          'rgba(${color.red},${color.green},${color.blue},${color.opacity})'
-      ..strokeStyle = 'black'
-      ..moveTo(c0.dx, c0.dy)
-      ..lineTo(c1.dx, c1.dy)
-      ..lineTo(c2.dx, c2.dy)
-      ..lineTo(c3.dx, c3.dy)
-      ..lineTo(c0.dx, c0.dy)
-      ..stroke()
-      ..fill()
-      ..closePath();
   }
 }
