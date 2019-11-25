@@ -16,7 +16,7 @@ class GraphScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('GraphScreen.build... ');
+    //print('GraphScreen.build... ');
     final isMobileScreen = !(MediaQuery.of(context).size.shortestSide >= 600);
     return Scaffold(
       body: Stack(
@@ -111,10 +111,12 @@ class Graph extends StatelessWidget {
             color: Colors.grey.shade900,
             child: Stack(
               children: <Widget>[
-                BackgroundCanvas(
-                  freezedNodes: controller.polygons,
-                  size: size,
-                ),
+                StreamBuilder<List<List<Node>>>(
+                    stream: controller.polygon$,
+                    builder: (context, snapshot) => BackgroundCanvas(
+                          freezedNodes: snapshot.data ?? [],
+                          size: size,
+                        )),
                 LiveCanvas(size: size, controller: controller),
               ],
             ),
@@ -158,7 +160,7 @@ class _LiveCanvasState extends State<LiveCanvas> with TickerProviderStateMixin {
         widget.controller.update(widget.size);
         return CustomPaint(
           size: widget.size,
-          painter: GraphPainter(widget.controller.nodes),
+          painter: ForegroundPainter(widget.controller.nodes),
         );
       },
     );
@@ -173,23 +175,26 @@ class BackgroundCanvas extends StatelessWidget {
       : super(key: key);
 
   Widget build(BuildContext context) {
-    //print('BackgroundCanvas.build... ');
-    return CustomPaint(
-      size: size,
-      isComplex: true,
-      painter: FreezedGraphPainter(freezedNodes),
+    //print('BackgroundCanvas.build... ${freezedNodes.length}');
+    return RepaintBoundary(
+      child: CustomPaint(
+        size: size,
+        isComplex: true,
+        willChange: false,
+        painter: BackgroundPainter(freezedNodes),
+      ),
     );
   }
 }
 
-class GraphPainter extends CustomPainter {
+class ForegroundPainter extends CustomPainter {
   List<Node> nodes;
 
-  GraphPainter(this.nodes);
+  ForegroundPainter(this.nodes);
 
   @override
   void paint(Canvas canvas, Size size) {
-    print('GraphPainter.paint... ${nodes.length}');
+    //print('GraphPainter.paint... ${nodes.length}');
     nodes
         .where((c) => c.offset.dy < size.height)
         .forEach((c) => c.draw(canvas));
@@ -209,20 +214,19 @@ class GraphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(GraphPainter oldDelegate) {
+  bool shouldRepaint(ForegroundPainter oldDelegate) {
     return listEquals(nodes, oldDelegate.nodes);
   }
 }
 
-class FreezedGraphPainter extends CustomPainter {
-  List<List<Node>> freezedNodes;
+class BackgroundPainter extends CustomPainter {
+  List<List<Node>> polygons;
 
-  FreezedGraphPainter(this.freezedNodes);
+  BackgroundPainter(this.polygons);
 
   @override
   void paint(Canvas canvas, Size size) {
-    print('FreezedGraphPainter.paint... ${freezedNodes.length}');
-    freezedNodes.forEach(
+    polygons.forEach(
       (nodes) {
         nodes
             .where((c) => c.offset.dy < size.height)
@@ -245,9 +249,5 @@ class FreezedGraphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(FreezedGraphPainter oldDelegate) {
-    return false;
-    /*return freezedNodes.length != oldDelegate.freezedNodes.length &&
-        freezedNodes.length > 0;*/
-  }
+  bool shouldRepaint(BackgroundPainter oldDelegate) => true;
 }
