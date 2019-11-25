@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:html' as html;
 import 'dart:ui';
 
@@ -7,17 +8,27 @@ import 'model.dart';
 
 class GraphController extends ChangeNotifier{
   List<List<Node>> freezedNodes = [];
+  StreamController<List<List<Node>>> _freezedNodeController = StreamController();
+  Stream<List<List<Node>>> get freezedNode$ => _freezedNodeController.stream;
   List<Node> nodes = [];
+
+  StreamController<Color> _colorStreamer = StreamController();
+  Stream<Color> get selectedColor$ => _colorStreamer.stream;
 
   Color _fillColor = fBlue;
 
   Color get fillColor => _fillColor;
 
-  get isEmpty => nodes.isEmpty;
+  get isEmpty => nodes.isEmpty && freezedNodes.isEmpty;
 
   set fillColor(Color fillColor) {
     _fillColor = fillColor;
-    notifyListeners();
+    _colorStreamer.add( _fillColor);
+  }
+  
+  dispose(){
+    _freezedNodeController.close();
+    _colorStreamer.close();
   }
 
   addPoint(Offset offset) {
@@ -38,6 +49,7 @@ class GraphController extends ChangeNotifier{
   freeze() {
     nodes.forEach((c) => c.freeze());
     freezedNodes.add([...nodes]);
+    _freezedNodeController.add(freezedNodes);
     nodes = [];
   }
 
