@@ -64,7 +64,7 @@ class Appbar extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.grey.shade700,),
-                  child: Image.asset('github.png'),
+                  child: Image.asset('github.png', width: 24,),
                 ),
                 onTap: () => html.window
                     .open('http://github.com/rxlabz/algrafx', '_blank'),
