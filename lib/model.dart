@@ -34,8 +34,9 @@ class Node {
 
   freeze() => _freezed = true;
 
+  static final paint = Paint()..color = Colors.yellow.withOpacity(0.3);
+
   void draw(Canvas canvas) {
-    final paint = Paint()..color = Colors.yellow.withOpacity(0.3);
     canvas.drawCircle(offset, 2, paint);
   }
 }
@@ -45,8 +46,9 @@ class Line {
 
   Line(this.points);
 
+  static final paint = Paint()..color = Colors.grey.shade800;
+
   void draw(Canvas canvas) {
-    final paint = Paint()..color = Colors.grey.shade800;
     canvas.drawLine(points.first.offset, points.last.offset, paint);
   }
 }

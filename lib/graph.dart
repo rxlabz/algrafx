@@ -71,77 +71,158 @@ class Graph extends StatefulWidget {
 }
 
 class _GraphState extends State<Graph> with TickerProviderStateMixin {
+  CustomPaint _frozenNodePainter;
+  AnimationController _gravityAnimationController;
+  Size size;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    size = MediaQuery.of(context).size;
+    _recreateFrozenNodePainter();
+    _gravityAnimationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 100),
+    )
+      ..addListener(() {
+        widget.controller.update(size);
+        if (widget.controller.nodes.isEmpty) {
+          _gravityAnimationController.stop();
+        }
+      })
+      ..forward()
+      ..repeat();
+  }
+
+  void _recreateFrozenNodePainter() {
+    setState(() {
+      _frozenNodePainter = CustomPaint(
+        size: size,
+        painter: MultiPainter([
+          for (List<Node> frozenList in widget.controller.freezedNodes)
+            GraphPainter(frozenList)
+        ]),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return RawKeyboardListener(
       focusNode: FocusNode(),
       autofocus: true,
       onKey: (event) {
-        if (event.data.keyLabel == ' ') widget.controller.freeze();
+        if (event.data.keyLabel == ' ') {
+          widget.controller.freeze();
+          _recreateFrozenNodePainter();
+        }
       },
-      child: MouseRegion(
-        onHover: (event) => widget.controller.addPoint(event.position),
-        child: GestureDetector(
-          onTap: widget.controller.freeze,
-          onPanUpdate: (event) =>
-              widget.controller.addPoint(event.localPosition),
-          child: Container(
-            constraints: BoxConstraints.expand(),
-            color: Colors.grey.shade900,
-            child: AnimatedBuilder(
-              animation: AnimationController(
-                  vsync: this, duration: Duration(milliseconds: 100))
-                ..forward()
-                ..repeat(),
-              builder: (c, _) {
-                final size = MediaQuery.of(c).size;
-                widget.controller.update(size);
-                return CustomPaint(
-                  size: size,
-                  painter: GraphPainter(
-                      widget.controller.freezedNodes, widget.controller.nodes),
-                );
-              },
-            ),
+      child: GestureDetector(
+        onTap: () {
+          widget.controller.freeze();
+          _recreateFrozenNodePainter();
+        },
+        onPanUpdate: (event) {
+          widget.controller.addPoint(event.localPosition);
+          _gravityAnimationController
+            ..forward()
+            ..repeat();
+        },
+        child: Container(
+          constraints: BoxConstraints.expand(),
+          color: Colors.grey.shade900,
+          child: Stack(
+            children: [
+              _frozenNodePainter,
+              RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: _gravityAnimationController,
+                  builder: (c, _) {
+                    return _trackMouse(CustomPaint(
+                      size: size,
+                      painter: GraphPainter(widget.controller.nodes),
+                    ));
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+
+  MouseRegion _trackMouse(Widget child) {
+    return MouseRegion(
+      onHover: (event) {
+        widget.controller.addPoint(event.position);
+        _gravityAnimationController
+          ..forward()
+          ..repeat();
+      },
+      child: GestureDetector(
+        onTap: () {
+          widget.controller.freeze();
+          _recreateFrozenNodePainter();
+        },
+        onPanUpdate: (event) {
+          widget.controller.addPoint(event.globalPosition);
+          _gravityAnimationController
+            ..forward()
+            ..repeat();
+        },
+        child: child,
+      ),
+    );
+  }
 }
 
-class GraphPainter extends CustomPainter {
-  List<Node> circles;
-  List<List<Node>> freezedCircles;
+class MultiPainter extends CustomPainter {
+  MultiPainter(this.painters);
 
-  GraphPainter(this.freezedCircles, this.circles);
+  final List<CustomPainter> painters;
 
   @override
   void paint(Canvas canvas, Size size) {
-    freezedCircles.forEach(
-      (circles) {
-        circles
-            .where((c) => c.offset.dy < size.height)
-            .forEach((c) => c.draw(canvas));
-        for (int i = 1; i < circles.length; i++) {
-          final l = Line([circles[i - 1], circles[i]]);
-          l.draw(canvas);
-        }
-        for (int i = 1; i < circles.length; i++) {
-          if (i > 2) {
-            final prevR = Polygon([circles[i - 2], circles[i - 1]]);
-            final r = Polygon([circles[i - 1], circles[i]],
-                previousPoints: [prevR.points[1], prevR.points[2]],
-                color: circles[i].color);
-            r.draw(canvas);
-          }
-        }
-      },
-    );
+    for (CustomPainter painter in painters) {
+      painter.paint(canvas, size);
+    }
+  }
 
+  @override
+  bool shouldRepaint(MultiPainter oldDelegate) {
+    return !identical(this, oldDelegate);
+  }
+}
+
+class GraphPainter extends CustomPainter {
+  final List<Node> circles;
+
+  GraphPainter(this.circles);
+
+  static final Paint dummyRectPaint = Paint()
+    ..color = Color.fromARGB(0, 255, 255, 255)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 0.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // The dummy rect is to workaround a bug in Flutter for web that this app
+    // uncovered. It seems when the canvas size changes due to changing contents
+    // we are unable to compute the mouse event offset correctly. A second benefit
+    // is that this keeps the canvas size stable, letting the engine reuse the
+    // same canvas no matter what nodes are painted.
+    canvas.drawRect(Offset.zero & size, dummyRectPaint);
     circles
         .where((c) => c.offset.dy < size.height)
-        .forEach((c) => c.draw(canvas));
+        .forEach((c) {
+          c.draw(canvas);
+        });
     for (int i = 1; i < circles.length; i++) {
       final l = Line([circles[i - 1], circles[i]]);
       l.draw(canvas);
@@ -159,7 +240,8 @@ class GraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(GraphPainter oldDelegate) {
-    return circles != oldDelegate.circles ||
-        freezedCircles != oldDelegate.freezedCircles;
+    // We always have to repaint because the circle lists are internally mutable,
+    // and so comparing them does not tell us whether anything's changed or not.
+    return true;
   }
 }

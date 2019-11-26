@@ -26,8 +26,11 @@ class GraphController extends ChangeNotifier{
   }
 
   update(Size size) {
-    nodes = nodes.where((c) => c.offset.dy < size.height).toList()
-      ..forEach((c) => c.update());
+    nodes = [
+      for (Node c in nodes)
+        if (c.offset.dy < size.height)
+          c..update(),
+    ];
   }
 
   clear() {
