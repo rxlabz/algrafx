@@ -26,10 +26,10 @@ class Appbar extends StatelessWidget {
           child: Text('AlGrafx', style: TextStyle(color: Colors.pink)),
         ),
         if (!isMobileScreen)
-          AnimatedBuilder(
-            animation: controller,
-            builder: (c, _) => ColorSelector(
-              color: controller.fillColor,
+          StreamBuilder(
+            stream: controller.selectedColor$,
+            builder: (c, snapshot) => ColorSelector(
+              color: snapshot.data ?? controller.fillColor,
               onColorSelection: (c) => controller.fillColor = c,
             ),
           ),
