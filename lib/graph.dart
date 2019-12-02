@@ -195,14 +195,16 @@ class ForegroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     //print('GraphPainter.paint... ${nodes.length}');
-    nodes
-        .where((c) => c.offset.dy < size.height)
-        .forEach((c) => c.draw(canvas));
-    for (int i = 1; i < nodes.length; i++) {
-      final l = Line([nodes[i - 1], nodes[i]]);
-      l.draw(canvas);
-    }
-    for (int i = 1; i < nodes.length; i++) {
+
+    for (int i = 0; i < nodes.length; i++) {
+      final node = nodes[i];
+      if (node.offset.dy < size.height) node.draw(canvas);
+
+      if (i > 0) {
+        final l = Line([nodes[i - 1], nodes[i]]);
+        l.draw(canvas);
+      }
+
       if (i > 2) {
         final prevR = Polygon([nodes[i - 2], nodes[i - 1]]);
         final r = Polygon([nodes[i - 1], nodes[i]],
@@ -215,7 +217,7 @@ class ForegroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ForegroundPainter oldDelegate) {
-    return listEquals(nodes, oldDelegate.nodes);
+    return true;
   }
 }
 
@@ -228,14 +230,15 @@ class BackgroundPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     polygons.forEach(
       (nodes) {
-        nodes
-            .where((c) => c.offset.dy < size.height)
-            .forEach((c) => c.draw(canvas));
-        for (int i = 1; i < nodes.length; i++) {
-          final l = Line([nodes[i - 1], nodes[i]]);
-          l.draw(canvas);
-        }
-        for (int i = 1; i < nodes.length; i++) {
+        for (int i = 0; i < nodes.length; i++) {
+          final node = nodes[i];
+          if (node.offset.dy < size.height) node.draw(canvas);
+
+          if (i > 0) {
+            final l = Line([nodes[i - 1], nodes[i]]);
+            l.draw(canvas);
+          }
+
           if (i > 2) {
             final prevR = Polygon([nodes[i - 2], nodes[i - 1]]);
             final r = Polygon([nodes[i - 1], nodes[i]],

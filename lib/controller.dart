@@ -42,8 +42,14 @@ class GraphController extends ChangeNotifier {
   }
 
   update(Size size) {
-    nodes = nodes.where((node) => node.offset.dy < size.height).toList()
-      ..forEach((node) => node.update());
+    final filteredNodes = <Node>[];
+    for (final node in nodes) {
+      if (node.offset.dy < size.height) {
+        node.update();
+        filteredNodes.add(node);
+      }
+      nodes = filteredNodes;
+    }
   }
 
   clear() {
@@ -52,13 +58,15 @@ class GraphController extends ChangeNotifier {
   }
 
   freeze() {
-    nodes.forEach((c) => c.freeze());
-    polygons.add([...nodes]);
+    polygons.add([for (final node in nodes) node..freeze()]);
     _polygonStreamer.add(polygons);
     nodes = [];
   }
 
   void undo() {
+    if (polygons.isEmpty) return;
+
     polygons.removeLast();
+    _polygonStreamer.add(polygons);
   }
 }
