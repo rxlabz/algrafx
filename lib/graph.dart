@@ -46,7 +46,9 @@ class GraphScreen extends StatelessWidget {
                 ),
               ),
             ),
-          OnBoarding(),
+          OnBoarding(isMobileScreen
+              ? 'Touch/Pan to draw & Tap to freeze'
+              : 'Move your cursor to draw & Click or hit Space to freeze'),
         ],
       ),
     );
@@ -54,6 +56,10 @@ class GraphScreen extends StatelessWidget {
 }
 
 class OnBoarding extends StatefulWidget {
+  final String content;
+
+  OnBoarding(this.content);
+
   @override
   _OnBoardingState createState() => _OnBoardingState();
 }
@@ -77,7 +83,7 @@ class _OnBoardingState extends State<OnBoarding> {
           padding: const EdgeInsets.all(12.0),
           color: Colors.black54,
           child: Text(
-            'Move your cursor / Click or hit Space to freeze',
+            widget.content,
             style: TextStyle(color: Colors.white),
           ),
         ),
@@ -101,26 +107,19 @@ class Graph extends StatelessWidget {
       onKey: (event) {
         if (event.data.keyLabel == ' ') controller.freeze();
       },
-      child: MouseRegion(
-        onHover: (event) => controller.addPoint(event.position),
-        child: GestureDetector(
-          onTap: controller.freeze,
-          onPanUpdate: (event) => controller.addPoint(event.localPosition),
-          child: Container(
-            constraints: BoxConstraints.expand(),
-            color: Colors.grey.shade900,
-            child: Stack(
-              children: <Widget>[
-                StreamBuilder<List<List<Node>>>(
-                    stream: controller.polygon$,
-                    builder: (context, snapshot) => BackgroundCanvas(
-                          freezedNodes: snapshot.data ?? [],
-                          size: size,
-                        )),
-                LiveCanvas(size: size, controller: controller),
-              ],
-            ),
-          ),
+      child: Container(
+        constraints: BoxConstraints.expand(),
+        color: Colors.grey.shade900,
+        child: Stack(
+          children: <Widget>[
+            StreamBuilder<List<List<Node>>>(
+                stream: controller.polygon$,
+                builder: (context, snapshot) => BackgroundCanvas(
+                      freezedNodes: snapshot.data ?? [],
+                      size: size,
+                    )),
+            LiveCanvas(size: size, controller: controller),
+          ],
         ),
       ),
     );
@@ -145,8 +144,18 @@ class _LiveCanvasState extends State<LiveCanvas> with TickerProviderStateMixin {
   AnimationController anim;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print('_LiveCanvasState.didChangeDependencies... ');
+  }
+
+  @override
   void initState() {
     anim = AnimationController(vsync: this, duration: Duration(seconds: 1))
+      ..addListener(() {
+        widget.controller.update(widget.size);
+        if (widget.controller.nodes.isEmpty) anim.stop();
+      })
       ..forward()
       ..repeat();
     super.initState();
@@ -154,16 +163,32 @@ class _LiveCanvasState extends State<LiveCanvas> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: anim,
-      builder: (c, _) {
-        widget.controller.update(widget.size);
-        return CustomPaint(
-          size: widget.size,
-          painter: ForegroundPainter(widget.controller.nodes),
-        );
-      },
-    );
+    return MouseRegion(
+        onHover: (event) {
+          widget.controller.addPoint(event.localPosition);
+          anim
+            ..forward()
+            ..repeat();
+        },
+        child: GestureDetector(
+            onTap: widget.controller.freeze,
+            onPanUpdate: (event) {
+              widget.controller.addPoint(event.localPosition);
+              anim
+                ..forward()
+                ..repeat();
+            },
+            child: AnimatedBuilder(
+              animation: anim,
+              builder: (c, _) {
+                return RepaintBoundary(
+                  child: CustomPaint(
+                    size: widget.size,
+                    painter: ForegroundPainter(widget.controller.nodes),
+                  ),
+                );
+              },
+            )));
   }
 }
 
@@ -192,9 +217,16 @@ class ForegroundPainter extends CustomPainter {
 
   ForegroundPainter(this.nodes);
 
+  static final Paint dummyRectPaint = Paint()
+    ..color = Color.fromARGB(0, 255, 255, 255)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 0.0;
+
   @override
   void paint(Canvas canvas, Size size) {
-    //print('GraphPainter.paint... ${nodes.length}');
+    print('GraphPainter.paint... ${nodes.length}');
+
+    canvas.drawRect(Offset.zero & size, dummyRectPaint);
 
     for (int i = 0; i < nodes.length; i++) {
       final node = nodes[i];

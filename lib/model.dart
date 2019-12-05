@@ -9,6 +9,8 @@ const double cG = 0.03;
 const fBlue = Color(0xff4FBDF6);
 
 class Node {
+  static final yellowFill = Paint()..color = Color(0x55FFEB3B);
+
   Offset gravity = Offset(0, G);
 
   Offset offset;
@@ -34,18 +36,18 @@ class Node {
   freeze() => _freezed = true;
 
   void draw(Canvas canvas) {
-    final paint = Paint()..color = Colors.yellow.withOpacity(0.3);
-    canvas.drawCircle(offset, 2, paint);
+    canvas.drawCircle(offset, 2, yellowFill);
   }
 }
 
 class Line {
   final List<Node> points;
 
+  static final paint = Paint()..color = const Color(0xFF424242);
+
   Line(this.points);
 
   void draw(Canvas canvas) {
-    final paint = Paint()..color = Colors.grey.shade800;
     canvas.drawLine(points.first.offset, points.last.offset, paint);
   }
 }

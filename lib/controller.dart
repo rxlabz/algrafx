@@ -55,6 +55,7 @@ class GraphController extends ChangeNotifier {
   clear() {
     nodes = [];
     polygons = [];
+    _polygonStreamer.add(polygons);
   }
 
   freeze() {
