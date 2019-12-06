@@ -7,6 +7,14 @@ const double G = 2.0;
 const double cG = 0.03;
 
 const fBlue = Color(0xff4FBDF6);
+const fGrey = Color(0xFF212121);
+
+class ColorSelection {
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  const ColorSelection({this.backgroundColor, this.foregroundColor});
+}
 
 class Node {
   static final yellowFill = Paint()..color = Color(0x55FFEB3B);

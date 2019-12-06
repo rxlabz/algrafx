@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 import 'model.dart';
 
@@ -14,15 +15,30 @@ class GraphController extends ChangeNotifier {
 
   List<Node> nodes = [];
 
-  StreamController<Color> _colorStreamer = StreamController();
+  StreamController<Color> _colorStreamer = StreamController.broadcast();
 
   Stream<Color> get selectedColor$ => _colorStreamer.stream;
+
+  StreamController<Color> _backgroundColorStreamer =
+      StreamController.broadcast();
+
+  Stream<Color> get backgroundColor$ => _backgroundColorStreamer.stream;
+
+  get isEmpty => nodes.isEmpty && polygons.isEmpty;
+
+  Color _backgroundColor = fGrey;
+
+  get backgroundColor => _backgroundColor;
+
+  set backgroundColor(Color backgroundColor) {
+    _backgroundColor = backgroundColor;
+    _backgroundColorStreamer.add(_backgroundColor);
+    _colorStreamer.add(_fillColor);
+  }
 
   Color _fillColor = fBlue;
 
   Color get fillColor => _fillColor;
-
-  get isEmpty => nodes.isEmpty && polygons.isEmpty;
 
   set fillColor(Color fillColor) {
     _fillColor = fillColor;
@@ -36,12 +52,12 @@ class GraphController extends ChangeNotifier {
     super.dispose();
   }
 
-  addPoint(Offset offset) {
+  void addPoint(Offset offset) {
     nodes.add(Node(offset, fillColor));
     notifyListeners();
   }
 
-  update(Size size) {
+  void update(Size size) {
     final filteredNodes = <Node>[];
     for (final node in nodes) {
       if (node.offset.dy < size.height) {
@@ -52,13 +68,13 @@ class GraphController extends ChangeNotifier {
     }
   }
 
-  clear() {
+  void clear() {
     nodes = [];
     polygons = [];
     _polygonStreamer.add(polygons);
   }
 
-  freeze() {
+  void freeze() {
     polygons.add([for (final node in nodes) node..freeze()]);
     _polygonStreamer.add(polygons);
     nodes = [];

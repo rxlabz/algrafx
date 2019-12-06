@@ -23,8 +23,6 @@ class App extends StatelessWidget {
     final graphr = GraphController();
 
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: GraphScreen(graphr),
-    );
+        debugShowCheckedModeBanner: false, home: GraphScreen(graphr));
   }
 }

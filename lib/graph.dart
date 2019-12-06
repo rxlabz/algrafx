@@ -28,6 +28,7 @@ class GraphScreen extends StatelessWidget {
             right: 0,
             child: rx.Appbar(controller: controller),
           ),
+/*
           if (isMobileScreen)
             Positioned(
               left: 0,
@@ -45,7 +46,7 @@ class GraphScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
+            )*/
           OnBoarding(isMobileScreen
               ? 'Touch/Pan to draw & Tap to freeze'
               : 'Move your cursor to draw & Click or hit Space to freeze'),
@@ -107,21 +108,30 @@ class Graph extends StatelessWidget {
       onKey: (event) {
         if (event.data.keyLabel == ' ') controller.freeze();
       },
-      child: Container(
-        constraints: BoxConstraints.expand(),
-        color: Colors.grey.shade900,
-        child: Stack(
-          children: <Widget>[
-            StreamBuilder<List<List<Node>>>(
-                stream: controller.polygon$,
-                builder: (context, snapshot) => BackgroundCanvas(
-                      freezedNodes: snapshot.data ?? [],
-                      size: size,
-                    )),
-            LiveCanvas(size: size, controller: controller),
-          ],
+      child: StreamBuilder<Color>(
+          stream: controller.backgroundColor$,
+          builder: (context, snapshot) {
+            return Container(
+              constraints: BoxConstraints.expand(),
+              color: snapshot.data ?? fGrey,
+              child: _buildCanvasStack(size),
+            );
+          }),
+    );
+  }
+
+  Stack _buildCanvasStack(Size size) {
+    return Stack(
+      children: <Widget>[
+        StreamBuilder<List<List<Node>>>(
+          stream: controller.polygon$,
+          builder: (context, snapshot) => BackgroundCanvas(
+            freezedNodes: snapshot.data ?? [],
+            size: size,
+          ),
         ),
-      ),
+        LiveCanvas(size: size, controller: controller),
+      ],
     );
   }
 }
@@ -192,26 +202,6 @@ class _LiveCanvasState extends State<LiveCanvas> with TickerProviderStateMixin {
   }
 }
 
-class BackgroundCanvas extends StatelessWidget {
-  final List<List<Node>> freezedNodes;
-  final Size size;
-
-  const BackgroundCanvas({Key key, this.freezedNodes, this.size})
-      : super(key: key);
-
-  Widget build(BuildContext context) {
-    //print('BackgroundCanvas.build... ${freezedNodes.length}');
-    return RepaintBoundary(
-      child: CustomPaint(
-        size: size,
-        isComplex: true,
-        willChange: false,
-        painter: BackgroundPainter(freezedNodes),
-      ),
-    );
-  }
-}
-
 class ForegroundPainter extends CustomPainter {
   List<Node> nodes;
 
@@ -224,7 +214,7 @@ class ForegroundPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    print('GraphPainter.paint... ${nodes.length}');
+    //print('GraphPainter.paint... ${nodes.length}');
 
     canvas.drawRect(Offset.zero & size, dummyRectPaint);
 
@@ -250,6 +240,26 @@ class ForegroundPainter extends CustomPainter {
   @override
   bool shouldRepaint(ForegroundPainter oldDelegate) {
     return true;
+  }
+}
+
+class BackgroundCanvas extends StatelessWidget {
+  final List<List<Node>> freezedNodes;
+  final Size size;
+
+  const BackgroundCanvas({Key key, this.freezedNodes, this.size})
+      : super(key: key);
+
+  Widget build(BuildContext context) {
+    //print('BackgroundCanvas.build... ${freezedNodes.length}');
+    return RepaintBoundary(
+      child: CustomPaint(
+        size: size,
+        isComplex: true,
+        willChange: false,
+        painter: BackgroundPainter(freezedNodes),
+      ),
+    );
   }
 }
 
