@@ -52,9 +52,6 @@ class _AppbarState extends State<Appbar> {
                 child: Text('AlGrafx', style: TextStyle(color: Colors.pink)),
               ),
               ...[
-                /*StreamBuilder(
-                stream: widget.controller.backgroundColor$,
-                builder: (c, snapshot) =>*/
                 ColorSelector(
                   color: snapshot.data ?? fGrey,
                   brightness: (snapshot.data ?? fGrey).computeLuminance() > 0.5
@@ -113,7 +110,7 @@ class _AppbarState extends State<Appbar> {
                     onPressed: () {
                       return widget.exporter.saveImage(
                         widget.controller.polygons,
-                        Colors.grey.shade900,
+                        widget.controller.backgroundColor,
                       );
                     },
                   ),
