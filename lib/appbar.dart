@@ -1,4 +1,5 @@
 import 'package:algrafx/model.dart';
+import 'package:algrafx/ui/settings_bar.dart';
 import 'package:flutter/material.dart';
 import 'dart:html' as html;
 
@@ -20,140 +21,130 @@ class Appbar extends StatefulWidget {
 }
 
 class _AppbarState extends State<Appbar> {
-  OverlayEntry _currentEntry;
-
-  @override
-  void dispose() {
-    if (_currentEntry != null) {
-      _currentEntry.remove();
-      _currentEntry = null;
-    }
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final isMobileScreen = !(MediaQuery.of(context).size.shortestSide >= 600);
-
-    return StreamBuilder(
-      stream: widget.controller.backgroundColor$,
+    final controller = widget.controller;
+    return StreamBuilder<Config>(
+      stream: controller.config$ /*.map<Color>((c) => c.backgroundColor)*/,
       builder: (c, snapshot) {
-        final luminance = (snapshot.data ?? fGrey).computeLuminance();
+        final config = snapshot.data ?? Config();
+
+        final luminance = config.backgroundColor.computeLuminance();
         final brightness = luminance > 0.5 ? Brightness.light : Brightness.dark;
         final iconColor =
             brightness == Brightness.light ? Colors.black54 : Colors.white54;
-        return Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Row(children: [
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Text('AlGrafx', style: TextStyle(color: Colors.pink)),
-              ),
-              ...[
-                ColorSelector(
-                  color: snapshot.data ?? fGrey,
-                  brightness: (snapshot.data ?? fGrey).computeLuminance() > 0.5
-                      ? Brightness.light
-                      : Brightness.dark,
-                  label: isMobileScreen ? '' : 'Background',
-                  onColorSelection: (c) {
-                    _currentEntry = null;
-                    widget.controller.backgroundColor = c;
-                  },
-                  onOpenOverlay: (entry) => _updateEntry(entry),
-                ),
-                /*),*/
-                StreamBuilder(
-                  stream: widget.controller.selectedColor$,
-                  builder: (c, snapshot) {
-                    final luminance =
-                        (widget.controller.backgroundColor ?? fGrey)
-                            .computeLuminance();
-                    final brightness =
-                        luminance > 0.5 ? Brightness.light : Brightness.dark;
-                    return ColorSelector(
-                      color: snapshot.data ?? widget.controller.fillColor,
-                      brightness: brightness,
-                      label: isMobileScreen ? '' : 'Pen',
-                      onColorSelection: (c) {
-                        _currentEntry = null;
-                        widget.controller.fillColor = c;
-                      },
-                      onOpenOverlay: (entry) => _updateEntry(entry),
-                    );
-                  },
-                ),
-              ]
-            ]),
-            Row(
-              children: <Widget>[
-                Tooltip(
-                  message: 'Undo',
-                  child: IconButton(
-                    icon: Icon(Icons.undo, color: iconColor),
-                    onPressed: widget.controller.undo,
-                  ),
-                ),
-                Tooltip(
-                  message: 'Clear',
-                  child: IconButton(
-                    icon: Icon(Icons.delete_forever, color: iconColor),
-                    onPressed: widget.controller.clear,
-                  ),
-                ),
-                Tooltip(
-                  message: 'Download',
-                  child: IconButton(
-                    icon: Icon(Icons.file_download, color: iconColor),
-                    onPressed: () {
-                      return widget.exporter.saveImage(
-                        widget.controller.polygons,
-                        widget.controller.backgroundColor,
-                      );
-                    },
-                  ),
-                ),
+        return Container(
+          color: Colors.black12,
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Row(children: [
                 Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: InkWell(
-                    hoverColor: Colors.white,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white54,
-                      ),
-                      child: Image.asset(
-                        'github.png',
-                        width: 24,
-                      ),
-                    ),
-                    onTap: () => html.window
-                        .open('http://github.com/rxlabz/algrafx', '_blank'),
-                  ),
+                  padding: const EdgeInsets.only(left: 12, right: 24),
+                  child: Text('AlGrafx', style: TextStyle(color: iconColor)),
                 ),
-              ],
-            ),
-          ],
+                if (!isMobileScreen)
+                  SettingsBar(
+                    direction: Axis.horizontal,
+                    config: config,
+                    controller: controller,
+                  ),
+                /*...[
+                  ColorSelector(
+                    color: config.backgroundColor,
+                    brightness: config.backgroundColor.computeLuminance() > 0.5
+                        ? Brightness.light
+                        : Brightness.dark,
+                    label: isMobileScreen ? '' : 'Background',
+                    onColorSelection: (c) {
+                      _currentEntry = null;
+                      controller.backgroundColor = c;
+                    },
+                    onOpenOverlay: (entry) => _updateEntry(entry),
+                  ),
+                  ColorSelector(
+                    color: config.fillColor,
+                    brightness: brightness,
+                    label: isMobileScreen ? '' : 'Fill',
+                    onColorSelection: (c) {
+                      _currentEntry = null;
+                      controller.fillColor = c;
+                    },
+                    onOpenOverlay: (entry) => _updateEntry(entry),
+                  ),
+                  Switch(
+                    value: config.strokeColor != Colors.transparent,
+                    onChanged: (value) => controller.strokeColor =
+                        value ? Colors.black54 : Colors.transparent,
+                  ),
+                  ColorSelector(
+                    color: config.strokeColor,
+                    brightness: brightness,
+                    label: isMobileScreen ? '' : 'Stroke',
+                    onColorSelection: (c) {
+                      _currentEntry = null;
+                      controller.strokeColor = c;
+                    },
+                    onOpenOverlay: (entry) => _updateEntry(entry),
+                  ),
+                ]*/
+              ]),
+              Row(
+                children: <Widget>[
+                  Tooltip(
+                    message: 'Undo',
+                    child: IconButton(
+                      icon: Icon(Icons.undo, color: iconColor),
+                      onPressed: controller.undo,
+                    ),
+                  ),
+                  Tooltip(
+                    message: 'Clear',
+                    child: IconButton(
+                      icon: Icon(Icons.delete_forever, color: iconColor),
+                      onPressed: controller.clear,
+                    ),
+                  ),
+                  Tooltip(
+                    message: 'Download',
+                    child: IconButton(
+                      icon: Icon(Icons.file_download, color: iconColor),
+                      onPressed: () {
+                        return widget.exporter.saveImage(
+                          controller.polygons,
+                          controller.backgroundColor,
+                          controller.strokeColor,
+                        );
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: InkWell(
+                      hoverColor: Colors.white,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white54,
+                        ),
+                        child: Image.asset(
+                          'github.png',
+                          width: 24,
+                        ),
+                      ),
+                      onTap: () => html.window
+                          .open('http://github.com/rxlabz/algrafx', '_blank'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         );
       },
     );
-  }
-
-  void _updateEntry(Future<OverlayEntry> entry) async {
-    _clearOverlay();
-    if (entry != null) _currentEntry = await entry;
-
-    setState(() {});
-  }
-
-  void _clearOverlay() {
-    print('_AppbarState._clearOverlay... $_currentEntry');
-    if (_currentEntry != null) {
-      _currentEntry.remove();
-      _currentEntry = null;
-    }
   }
 }

@@ -3,10 +3,16 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:rxdart/rxdart.dart';
 
 import 'model.dart';
 
-class GraphController extends ChangeNotifier {
+class GraphController {
+  GraphController() {
+    _config = Config();
+    _configStreamer.stream.listen((c) => _config = c);
+  }
+
   List<List<Node>> polygons = [];
 
   StreamController<List<List<Node>>> _polygonStreamer = StreamController();
@@ -15,46 +21,45 @@ class GraphController extends ChangeNotifier {
 
   List<Node> nodes = [];
 
-  StreamController<Color> _colorStreamer = StreamController.broadcast();
-
-  Stream<Color> get selectedColor$ => _colorStreamer.stream;
-
-  StreamController<Color> _backgroundColorStreamer =
-      StreamController.broadcast();
-
-  Stream<Color> get backgroundColor$ => _backgroundColorStreamer.stream;
-
   get isEmpty => nodes.isEmpty && polygons.isEmpty;
 
-  Color _backgroundColor = fGrey;
+  Config _config;
 
-  get backgroundColor => _backgroundColor;
+  Config get config => _config;
 
-  set backgroundColor(Color backgroundColor) {
-    _backgroundColor = backgroundColor;
-    _backgroundColorStreamer.add(_backgroundColor);
-    _colorStreamer.add(_fillColor);
+  set config(Config value) {
+    _config = value;
+    _configStreamer.add(value);
   }
 
-  Color _fillColor = fBlue;
+  StreamController<Config> _configStreamer = BehaviorSubject.seeded(Config());
 
-  Color get fillColor => _fillColor;
+  Stream<Config> get config$ => _configStreamer.stream;
 
-  set fillColor(Color fillColor) {
-    _fillColor = fillColor;
-    _colorStreamer.add(_fillColor);
-  }
+  get backgroundColor => _config.backgroundColor;
+
+  set backgroundColor(Color backgroundColor) =>
+      _configStreamer.add(_config.copyWith(backgroundColor: backgroundColor));
+
+  Color get fillColor => _config.fillColor;
+
+  set fillColor(Color fillColor) =>
+      _configStreamer.add(_config.copyWith(fillColor: fillColor));
+
+  Color get strokeColor => _config.strokeColor;
+
+  set strokeColor(Color strokeColor) =>
+      _configStreamer.add(_config.copyWith(strokeColor: strokeColor));
 
   @override
   dispose() {
+    _configStreamer.close();
     _polygonStreamer.close();
-    _colorStreamer.close();
-    super.dispose();
   }
 
   void addPoint(Offset offset) {
-    nodes.add(Node(offset, fillColor));
-    notifyListeners();
+    nodes.add(Node(offset, fillColor, strokeColor));
+    //notifyListeners();
   }
 
   void update(Size size) {

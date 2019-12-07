@@ -39,27 +39,28 @@ class _ColorSelectorState extends State<ColorSelector> {
           widget.label,
           style: TextStyle(color: labelColor.withOpacity(0.7)),
         ),
-        InkWell(
-          onTap: () {
-            if (colorPicker != null) {
-              widget.onOpenOverlay(null);
-              colorPicker = null;
-              setState(() {});
-            } else {
-              colorPicker = _openColorPicker(context);
-              widget.onOpenOverlay(colorPicker);
-            }
-          },
-          child: Container(
-            margin: EdgeInsets.all(8),
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              border: Border.all(color: labelColor, width: 2),
-              color: widget.color,
+        if (widget.color != Colors.transparent)
+          InkWell(
+            onTap: () {
+              if (colorPicker != null) {
+                widget.onOpenOverlay(null);
+                colorPicker = null;
+                setState(() {});
+              } else {
+                colorPicker = _openColorPicker(context);
+                widget.onOpenOverlay(colorPicker);
+              }
+            },
+            child: Container(
+              margin: EdgeInsets.all(8),
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                border: Border.all(color: labelColor, width: 2),
+                color: widget.color,
+              ),
             ),
           ),
-        ),
       ],
     );
   }

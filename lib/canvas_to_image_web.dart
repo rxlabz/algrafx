@@ -4,13 +4,14 @@ import 'dart:ui' as ui;
 import 'model.dart';
 
 abstract class ImageExporter {
-  saveImage(List<List<Node>> polygons, ui.Color color);
+  saveImage(List<List<Node>> polygons, ui.Color color, ui.Color strokeColor);
 }
 
 class ImageExporterWeb implements ImageExporter {
   const ImageExporterWeb();
 
-  void saveImage(List<List<Node>> polygons, ui.Color color) {
+  void saveImage(
+      List<List<Node>> polygons, ui.Color color, ui.Color strokeColor) {
     final link = AnchorElement();
 
     final canvas = CanvasElement(
@@ -25,9 +26,12 @@ class ImageExporterWeb implements ImageExporter {
       for (int i = 1; i < polygonCircles.length; i++) {
         if (i > 2) {
           final prevR = Polygon([polygonCircles[i - 2], polygonCircles[i - 1]]);
-          final polygon = Polygon([polygonCircles[i - 1], polygonCircles[i]],
-              previousPoints: [prevR.points[1], prevR.points[2]],
-              color: polygonCircles[i].color);
+          final polygon = Polygon(
+            [polygonCircles[i - 1], polygonCircles[i]],
+            previousPoints: [prevR.points[1], prevR.points[2]],
+            fillColor: polygonCircles[i].color,
+            strokeColor: polygonCircles[i].strokeColor,
+          );
           _drawWeb(polygon, canvas);
         }
       }
@@ -80,8 +84,10 @@ class ImageExporterWeb implements ImageExporter {
     canvas.context2D
       ..beginPath()
       ..fillStyle =
-          'rgba(${polygon.color.red},${polygon.color.green},${polygon.color.blue},${polygon.color.opacity})'
-      ..strokeStyle = 'black'
+          'rgba(${polygon.fillColor.red},${polygon.fillColor.green},${polygon.fillColor.blue},${polygon.fillColor.opacity})'
+      ..strokeStyle = polygon.strokeColor != null
+          ? 'rgba(${polygon.strokeColor.red},${polygon.strokeColor.green},${polygon.strokeColor.blue},${polygon.strokeColor.opacity})'
+          : 'transparent'
       ..moveTo(c0.dx, c0.dy)
       ..lineTo(c1.dx, c1.dy)
       ..lineTo(c2.dx, c2.dy)
@@ -92,60 +98,3 @@ class ImageExporterWeb implements ImageExporter {
       ..closePath();
   }
 }
-
-/*void canvasToImage(List<List<Node>> polygons,
-    [String backgroundColor = "#666666"]) {
-  final link = AnchorElement();
-
-  final canvas = CanvasElement(
-    width: window.innerWidth,
-    height: window.innerHeight,
-  );
-  final context = canvas.context2D;
-  num w = canvas.width;
-  num h = canvas.height;
-
-  polygons.forEach((polygonCircles) {
-    for (int i = 1; i < polygonCircles.length; i++) {
-      if (i > 2) {
-        final prevR = Polygon([polygonCircles[i - 2], polygonCircles[i - 1]]);
-        final polygon = Polygon([polygonCircles[i - 1], polygonCircles[i]],
-            previousPoints: [prevR.points[1], prevR.points[2]],
-            color: polygonCircles[i].color);
-        drawWeb(polygon, canvas);
-      }
-    }
-  });
-
-  ImageData data = context.getImageData(0, 0, w, h);
-
-  //store the current globalCompositeOperation
-  String compositeOperation = context.globalCompositeOperation;
-
-  //set to draw behind current content
-  context.globalCompositeOperation = "destination-over";
-
-  //set background color
-  context.fillStyle = backgroundColor;
-
-  //draw background / rect on entire canvas
-  context.fillRect(0, 0, w, h);
-
-  //get the image data from the canvas
-  var imageData = canvas.toDataUrl("image/png");
-
-  //clear the canvas
-  context.clearRect(0, 0, w, h);
-
-  //restore it with original / cached ImageData
-  context.putImageData(data, 0, 0);
-
-  //reset the globalCompositeOperation to what it was
-  context.globalCompositeOperation = compositeOperation;
-
-  //return the Base64 encoded data url string
-  link.download = "algrafr-${DateTime.now().millisecondsSinceEpoch}.png";
-  link.href = imageData;
-
-  link.click();
-}*/

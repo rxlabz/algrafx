@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:quiver/time.dart';
 
 import 'appbar.dart' as rx;
-import 'color_selector.dart';
 import 'controller.dart';
 import 'model.dart';
 
@@ -28,25 +27,6 @@ class GraphScreen extends StatelessWidget {
             right: 0,
             child: rx.Appbar(controller: controller),
           ),
-/*
-          if (isMobileScreen)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 30,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: StreamBuilder(
-                  initialData: controller.fillColor,
-                  stream: controller.selectedColor$,
-                  builder: (c, snapshot) => ColorSelector(
-                    color:
-                        snapshot.hasData ? snapshot.data : controller.fillColor,
-                    onColorSelection: (c) => controller.fillColor = c,
-                  ),
-                ),
-              ),
-            )*/
           OnBoarding(isMobileScreen
               ? 'Touch/Pan to draw & Tap to freeze'
               : 'Move your cursor to draw & Click or hit Space to freeze'),
@@ -109,7 +89,8 @@ class Graph extends StatelessWidget {
         if (event.data.keyLabel == ' ') controller.freeze();
       },
       child: StreamBuilder<Color>(
-          stream: controller.backgroundColor$,
+          stream:
+              controller.config$.map<Color>((Config c) => c.backgroundColor),
           builder: (context, snapshot) {
             return Container(
               constraints: BoxConstraints.expand(),
@@ -229,9 +210,12 @@ class ForegroundPainter extends CustomPainter {
 
       if (i > 2) {
         final prevR = Polygon([nodes[i - 2], nodes[i - 1]]);
-        final r = Polygon([nodes[i - 1], nodes[i]],
-            previousPoints: [prevR.points[1], prevR.points[2]],
-            color: nodes[i].color);
+        final r = Polygon(
+          [nodes[i - 1], nodes[i]],
+          previousPoints: [prevR.points[1], prevR.points[2]],
+          fillColor: nodes[i].color,
+          strokeColor: nodes[i].strokeColor,
+        );
         r.draw(canvas);
       }
     }
@@ -273,6 +257,7 @@ class BackgroundPainter extends CustomPainter {
     polygons.forEach(
       (nodes) {
         for (int i = 0; i < nodes.length; i++) {
+          /*
           final node = nodes[i];
           if (node.offset.dy < size.height) node.draw(canvas);
 
@@ -280,12 +265,15 @@ class BackgroundPainter extends CustomPainter {
             final l = Line([nodes[i - 1], nodes[i]]);
             l.draw(canvas);
           }
-
+          */
           if (i > 2) {
             final prevR = Polygon([nodes[i - 2], nodes[i - 1]]);
-            final r = Polygon([nodes[i - 1], nodes[i]],
-                previousPoints: [prevR.points[1], prevR.points[2]],
-                color: nodes[i].color);
+            final r = Polygon(
+              [nodes[i - 1], nodes[i]],
+              previousPoints: [prevR.points[1], prevR.points[2]],
+              fillColor: nodes[i].color,
+              strokeColor: nodes[i].strokeColor,
+            );
             r.draw(canvas);
           }
         }
