@@ -96,7 +96,6 @@ class _ColorSelectorState extends State<ColorSelector> {
         left: min(max(left - 80, 0), width - 200),
         child: _ColorPickerGrid(
           currentColor: widget.color,
-          label: widget.label,
           onSelect: () {
             onSelect();
             colorPicker = null;
@@ -115,14 +114,12 @@ class _ColorPickerGrid extends StatefulWidget {
   final ValueChanged<Color> onColorSelection;
   final VoidCallback onSelect;
   final Color currentColor;
-  final String label;
 
   const _ColorPickerGrid({
     Key key,
-    this.label,
-    this.currentColor,
     this.onColorSelection,
     this.onSelect,
+    this.currentColor,
   }) : super(key: key);
 
   @override
@@ -146,36 +143,24 @@ class __ColorPickerGridState extends State<_ColorPickerGrid> {
         color: Color(0x66333333),
         child: MouseRegion(
           onExit: (_) => widget.onSelect(),
-          child: Column(
-            children: <Widget>[
-              Text(widget.label),
-              Expanded(
-                child: GridView.count(
-                  shrinkWrap: true,
-                  crossAxisCount: 6,
-                  children: [
-                    ...Colors.primaries,
-                    Colors.white,
-                    Colors.black,
-                    fGrey
-                  ]
-                      .map((c) => InkWell(
-                            onTap: () {
-                              widget.onSelect();
-                              widget.onColorSelection(c);
-                            },
-                            child: Container(
-                              margin: EdgeInsets.all(
-                                  c.value == currentColor.value ? 13 : 8),
-                              width: c.value == currentColor.value ? 8 : 18,
-                              height: c.value == currentColor.value ? 8 : 18,
-                              color: c,
-                            ),
-                          ))
-                      .toList(),
-                ),
-              ),
-            ],
+          child: GridView.count(
+            shrinkWrap: true,
+            crossAxisCount: 6,
+            children: [...Colors.primaries, Colors.white, Colors.black, fGrey]
+                .map((c) => InkWell(
+                      onTap: () {
+                        widget.onSelect();
+                        widget.onColorSelection(c);
+                      },
+                      child: Container(
+                        margin: EdgeInsets.all(
+                            c.value == currentColor.value ? 13 : 8),
+                        width: c.value == currentColor.value ? 8 : 18,
+                        height: c.value == currentColor.value ? 8 : 18,
+                        color: c,
+                      ),
+                    ))
+                .toList(),
           ),
         ),
       ),
