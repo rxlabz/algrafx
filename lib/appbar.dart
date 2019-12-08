@@ -21,6 +21,10 @@ class Appbar extends StatefulWidget {
 }
 
 class _AppbarState extends State<Appbar> {
+  void _openDrawer() {
+    Scaffold.of(context).openEndDrawer();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobileScreen = !(MediaQuery.of(context).size.shortestSide >= 600);
@@ -40,107 +44,72 @@ class _AppbarState extends State<Appbar> {
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 12, right: 24),
-                  child: Text('AlGrafx', style: TextStyle(color: iconColor)),
-                ),
-                if (!isMobileScreen)
-                  SettingsBar(
-                    direction: Axis.horizontal,
-                    config: config,
-                    controller: controller,
-                  ),
-                /*...[
-                  ColorSelector(
-                    color: config.backgroundColor,
-                    brightness: config.backgroundColor.computeLuminance() > 0.5
-                        ? Brightness.light
-                        : Brightness.dark,
-                    label: isMobileScreen ? '' : 'Background',
-                    onColorSelection: (c) {
-                      _currentEntry = null;
-                      controller.backgroundColor = c;
-                    },
-                    onOpenOverlay: (entry) => _updateEntry(entry),
-                  ),
-                  ColorSelector(
-                    color: config.fillColor,
-                    brightness: brightness,
-                    label: isMobileScreen ? '' : 'Fill',
-                    onColorSelection: (c) {
-                      _currentEntry = null;
-                      controller.fillColor = c;
-                    },
-                    onOpenOverlay: (entry) => _updateEntry(entry),
-                  ),
-                  Switch(
-                    value: config.strokeColor != Colors.transparent,
-                    onChanged: (value) => controller.strokeColor =
-                        value ? Colors.black54 : Colors.transparent,
-                  ),
-                  ColorSelector(
-                    color: config.strokeColor,
-                    brightness: brightness,
-                    label: isMobileScreen ? '' : 'Stroke',
-                    onColorSelection: (c) {
-                      _currentEntry = null;
-                      controller.strokeColor = c;
-                    },
-                    onOpenOverlay: (entry) => _updateEntry(entry),
-                  ),
-                ]*/
-              ]),
-              Row(
-                children: <Widget>[
-                  Tooltip(
-                    message: 'Undo',
-                    child: IconButton(
-                      icon: Icon(Icons.undo, color: iconColor),
-                      onPressed: controller.undo,
-                    ),
-                  ),
-                  Tooltip(
-                    message: 'Clear',
-                    child: IconButton(
-                      icon: Icon(Icons.delete_forever, color: iconColor),
-                      onPressed: controller.clear,
-                    ),
-                  ),
-                  Tooltip(
-                    message: 'Download',
-                    child: IconButton(
-                      icon: Icon(Icons.file_download, color: iconColor),
-                      onPressed: () {
-                        return widget.exporter.saveImage(
-                          controller.polygons,
-                          controller.backgroundColor,
-                          controller.strokeColor,
-                        );
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: InkWell(
-                      hoverColor: Colors.white,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white54,
-                        ),
-                        child: Image.asset(
-                          'github.png',
-                          width: 24,
-                        ),
-                      ),
-                      onTap: () => html.window
-                          .open('http://github.com/rxlabz/algrafx', '_blank'),
-                    ),
-                  ),
-                ],
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text('AlGrafx', style: TextStyle(color: iconColor)),
               ),
+              /*if (!isMobileScreen)*/
+              SettingsBar(
+                direction: Axis.horizontal,
+                config: config,
+                controller: controller,
+              ),
+              if (isMobileScreen)
+                IconButton(
+                  icon: Icon(Icons.menu, color: iconColor),
+                  onPressed: _openDrawer,
+                ),
+              if (!isMobileScreen)
+                Row(
+                  children: <Widget>[
+                    Tooltip(
+                      message: 'Undo',
+                      child: IconButton(
+                        icon: Icon(Icons.undo, color: iconColor),
+                        onPressed: controller.undo,
+                      ),
+                    ),
+                    Tooltip(
+                      message: 'Clear',
+                      child: IconButton(
+                        icon: Icon(Icons.delete_forever, color: iconColor),
+                        onPressed: controller.clear,
+                      ),
+                    ),
+                    Tooltip(
+                      message: 'Download',
+                      child: IconButton(
+                        icon: Icon(Icons.file_download, color: iconColor),
+                        onPressed: () {
+                          return widget.exporter.saveImage(
+                            controller.polygons,
+                            controller.backgroundColor,
+                            controller.strokeColor,
+                          );
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: InkWell(
+                        hoverColor: Colors.white,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white54,
+                          ),
+                          child: Image.asset(
+                            'github.png',
+                            width: 24,
+                          ),
+                        ),
+                        onTap: () => html.window
+                            .open('http://github.com/rxlabz/algrafx', '_blank'),
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
         );

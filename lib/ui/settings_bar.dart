@@ -9,7 +9,8 @@ class SettingsBar extends StatefulWidget {
   final Config config;
   final GraphController controller;
 
-  const SettingsBar({Key key, this.direction, this.config, this.controller})
+  const SettingsBar(
+      {Key key, this.direction = Axis.vertical, this.config, this.controller})
       : super(key: key);
 
   @override
@@ -36,11 +37,14 @@ class _SettingsBarState extends State<SettingsBar> {
 
     return Flex(
       direction: widget.direction,
+      crossAxisAlignment: widget.direction == Axis.vertical
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.center,
       children: <Widget>[
         ColorSelector(
           color: widget.config.backgroundColor,
           brightness: brightness,
-          label: isMobileScreen ? '' : 'Background',
+          label: /*isMobileScreen ? '' : */ 'Background',
           onColorSelection: (c) {
             _currentEntry = null;
             widget.controller.backgroundColor = c;
@@ -51,33 +55,38 @@ class _SettingsBarState extends State<SettingsBar> {
         ColorSelector(
           color: widget.config.fillColor,
           brightness: brightness,
-          label: isMobileScreen ? '' : 'Fill',
+          label: /*isMobileScreen ? '' : */ 'Fill',
           onColorSelection: (c) {
             _currentEntry = null;
             widget.controller.fillColor = c;
           },
           onOpenOverlay: (entry) => _updateEntry(entry),
         ),
-        SizedBox(width: 10),
-        Switch(
-          value: widget.config.strokeColor != Colors.transparent,
-          onChanged: (value) => widget.controller.strokeColor =
-              value ? Colors.black54 : Colors.transparent,
-          activeColor: Colors.cyan,
-          inactiveThumbColor: Colors.white,
-          activeTrackColor: Colors.cyan.shade800,
-          inactiveTrackColor: Colors.grey.shade700,
-        ),
-        ColorSelector(
-          color: widget.config.strokeColor,
-          brightness: brightness,
-          label: isMobileScreen ? '' : 'Stroke',
-          onColorSelection: (c) {
-            _currentEntry = null;
-            widget.controller.strokeColor = c;
-          },
-          onOpenOverlay: (entry) => _updateEntry(entry),
-        ),
+        if (!isMobileScreen)
+          Row(
+            children: <Widget>[
+              SizedBox(width: 10),
+              Switch(
+                value: widget.config.strokeColor != Colors.transparent,
+                onChanged: (value) => widget.controller.strokeColor =
+                    value ? Colors.black54 : Colors.transparent,
+                activeColor: Colors.cyan,
+                inactiveThumbColor: Colors.white,
+                activeTrackColor: Colors.cyan.shade800,
+                inactiveTrackColor: Colors.grey.shade700,
+              ),
+              ColorSelector(
+                color: widget.config.strokeColor,
+                brightness: brightness,
+                label: isMobileScreen ? '' : 'Stroke',
+                onColorSelection: (c) {
+                  _currentEntry = null;
+                  widget.controller.strokeColor = c;
+                },
+                onOpenOverlay: (entry) => _updateEntry(entry),
+              ),
+            ],
+          ),
       ],
     );
   }

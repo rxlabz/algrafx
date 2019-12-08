@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:html' as html;
 
+import 'package:algrafx/ui/settings_bar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:quiver/time.dart';
 
 import 'appbar.dart' as rx;
+import 'canvas_to_image_web.dart';
+import 'color_selector.dart';
 import 'controller.dart';
 import 'model.dart';
 
@@ -13,11 +17,129 @@ class GraphScreen extends StatelessWidget {
 
   const GraphScreen(this.controller, {Key key}) : super(key: key);
 
+  final ImageExporterWeb exporter = const ImageExporterWeb();
+
   @override
   Widget build(BuildContext context) {
     //print('GraphScreen.build... ');
     final isMobileScreen = !(MediaQuery.of(context).size.shortestSide >= 600);
+    final textTheme = Theme.of(context).accentTextTheme;
+    final luminance = controller.config.backgroundColor.computeLuminance();
+    final brightness = luminance > 0.5 ? Brightness.light : Brightness.dark;
+    final iconColor =
+        brightness == Brightness.light ? Colors.black54 : Colors.white54;
     return Scaffold(
+      endDrawer: isMobileScreen
+          ? Theme(
+              data: ThemeData.dark(),
+              child: Drawer(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    children: <Widget>[
+                      StreamBuilder<bool>(
+                          stream: controller.config$
+                              .map((c) => c.strokeColor != Colors.transparent),
+                          builder: (context, snapshot) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Switch(
+                                  value: controller.config.strokeColor !=
+                                      Colors.transparent,
+                                  onChanged: (value) => controller.strokeColor =
+                                      value
+                                          ? Colors.black54
+                                          : Colors.transparent,
+                                  activeColor: Colors.cyan,
+                                  inactiveThumbColor: Colors.white,
+                                  activeTrackColor: Colors.cyan.shade800,
+                                  inactiveTrackColor: Colors.grey.shade700,
+                                ),
+                                Text('Stroke'),
+                                /*ColorSelector(
+                                color: controller.config.strokeColor,
+                                brightness: brightness,
+                                label: isMobileScreen ? '' : 'Stroke',
+                                onColorSelection: (c) {
+                                  _currentEntry = null;
+                                  controller.strokeColor = c;
+                                },
+                                onOpenOverlay: (entry) => _updateEntry(entry),
+                              ),*/
+                              ],
+                            );
+                          }),
+                      FlatButton.icon(
+                        label: Text('Undo'),
+                        icon: Icon(Icons.undo, color: iconColor),
+                        onPressed: controller.undo,
+                      ),
+                      FlatButton.icon(
+                        label: Text('Clear'),
+                        icon: Icon(Icons.delete_forever, color: iconColor),
+                        onPressed: controller.clear,
+                      ),
+                      FlatButton.icon(
+                        label: Text('Download'),
+                        icon: Icon(Icons.file_download, color: iconColor),
+                        onPressed: () {
+                          return exporter.saveImage(
+                            controller.polygons,
+                            controller.backgroundColor,
+                            controller.strokeColor,
+                          );
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: InkWell(
+                          hoverColor: Colors.white,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white54,
+                                ),
+                                child: Image.asset('github.png', width: 24),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 12.0),
+                                child: Text('On Github'),
+                              ),
+                            ],
+                          ),
+                          onTap: () => html.window.open(
+                              'http://github.com/rxlabz/algrafx', '_blank'),
+                        ),
+                      ),
+                    ],
+                  )
+                  /*Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text('Settings', style: textTheme.title),
+                      ),
+                      StreamBuilder<Config>(
+                          stream: controller.config$,
+                          builder: (context, snapshot) {
+                            return SettingsBar(
+                              config: controller.config,
+                              controller: controller,
+                            );
+                          }),
+                    ],
+                  )*/
+                  ,
+                ),
+              ),
+            )
+          : null,
       body: Stack(
         children: <Widget>[
           Graph(this.controller),
