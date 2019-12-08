@@ -51,6 +51,16 @@ class GraphController {
   set strokeColor(Color strokeColor) =>
       _configStreamer.add(_config.copyWith(strokeColor: strokeColor));
 
+  bool get applyForce => _config.applyForce;
+
+  set applyForce(bool applyForce) =>
+      _configStreamer.add(_config.copyWith(applyForce: applyForce));
+
+  bool get liveColor => _config.liveColor;
+
+  set liveColor(bool liveColor) =>
+      _configStreamer.add(_config.copyWith(liveColor: liveColor));
+
   @override
   dispose() {
     _configStreamer.close();
@@ -58,7 +68,8 @@ class GraphController {
   }
 
   void addPoint(Offset offset) {
-    nodes.add(Node(offset, fillColor, strokeColor));
+    nodes.add(Node(
+        offset, fillColor, strokeColor, config.applyForce, config.liveColor));
     //notifyListeners();
   }
 

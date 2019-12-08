@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -6,20 +7,25 @@ const double G = 2.0;
 
 const double cG = 0.03;
 
-const fBlue = Color(0xff4FBDF6);
-const fGrey = Color(0xFF212121);
+const fBlue = const Color(0xff4FBDF6);
+
+const fGrey = const Color(0xFF212121);
+
+const black = const Color(0xff000000);
 
 class Config {
   final Color backgroundColor;
   final Color fillColor;
   final Color strokeColor;
   final bool applyForce;
+  final bool liveColor;
 
   Config([
     this.backgroundColor = fGrey,
     this.fillColor = fBlue,
-    this.strokeColor = Colors.black54,
+    this.strokeColor = Colors.black,
     this.applyForce = true,
+    this.liveColor = true,
   ]);
 
   copyWith({
@@ -27,12 +33,14 @@ class Config {
     Color fillColor,
     Color strokeColor,
     bool applyForce,
+    bool liveColor,
   }) =>
       Config(
         backgroundColor ?? this.backgroundColor,
         fillColor ?? this.fillColor,
         strokeColor ?? this.strokeColor,
         applyForce ?? this.applyForce,
+        liveColor ?? this.liveColor,
       );
 
   @override
@@ -43,20 +51,20 @@ class Config {
           backgroundColor == other.backgroundColor &&
           fillColor == other.fillColor &&
           strokeColor == other.strokeColor &&
-          applyForce == other.applyForce;
+          applyForce == other.applyForce &&
+          liveColor == other.liveColor;
 
   @override
   int get hashCode =>
       backgroundColor.hashCode ^
       fillColor.hashCode ^
       strokeColor.hashCode ^
-      applyForce.hashCode;
+      applyForce.hashCode ^
+      liveColor.hashCode;
 }
 
 class Node {
   static final yellowFill = Paint()..color = Color(0x55FFEB3B);
-
-  bool forceEnabled = true;
 
   Offset gravity = Offset(0, G);
 
@@ -66,26 +74,43 @@ class Node {
 
   Color strokeColor;
 
+  final bool applyForce;
+
+  bool liveColor;
+
   bool _freezed = false;
 
   double get x => offset.dx;
   double get y => offset.dy;
 
-  Node(this.offset, this.color, this.strokeColor);
+  Node(this.offset, this.color, this.strokeColor, this.applyForce,
+      this.liveColor);
 
   update() {
     if (_freezed) return;
 
-    if (forceEnabled) offset += gravity;
-    gravity *= 1 + cG;
-    final hsl = HSLColor.fromColor(color);
-    color = hsl.withLightness(hsl.lightness - hsl.lightness * .05).toColor();
+    if (applyForce) {
+      offset += gravity;
+      gravity *= 1 + cG;
+    }
 
-    if (strokeColor != null) {
-      final strokeHsl = HSLColor.fromColor(strokeColor);
-      strokeColor = strokeHsl
-          .withLightness(strokeHsl.lightness - strokeHsl.lightness * .05)
-          .toColor();
+    if (liveColor) {
+      if (color != black) {
+        final hsl = HSLColor.fromColor(color);
+        color = hsl.withLightness(max(hsl.lightness - 0.01, 0)).toColor();
+      }
+
+      if (strokeColor != null && strokeColor != black) {
+        final strokeHsl = HSLColor.fromColor(strokeColor);
+        strokeColor = strokeHsl
+            .withLightness(max(strokeHsl.lightness - 0.01, 0))
+            .toColor();
+      }
+
+      if (color.value == black.value && strokeColor.value == black.value) {
+        liveColor = false;
+        if (!applyForce) freeze();
+      }
     }
   }
 

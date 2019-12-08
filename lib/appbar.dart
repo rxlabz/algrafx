@@ -27,10 +27,10 @@ class _AppbarState extends State<Appbar> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobileScreen = !(MediaQuery.of(context).size.shortestSide >= 600);
+    final isMobileScreen = MediaQuery.of(context).size.width <= 900;
     final controller = widget.controller;
     return StreamBuilder<Config>(
-      stream: controller.config$ /*.map<Color>((c) => c.backgroundColor)*/,
+      stream: controller.config$,
       builder: (c, snapshot) {
         final config = snapshot.data ?? Config();
 
@@ -48,7 +48,6 @@ class _AppbarState extends State<Appbar> {
                 padding: const EdgeInsets.all(10),
                 child: Text('AlGrafx', style: TextStyle(color: iconColor)),
               ),
-              /*if (!isMobileScreen)*/
               SettingsBar(
                 direction: Axis.horizontal,
                 config: config,
