@@ -1,11 +1,11 @@
+import 'dart:html' as html;
+
 import 'package:algrafx/model.dart';
 import 'package:algrafx/ui/settings_bar.dart';
 import 'package:flutter/material.dart';
-import 'dart:html' as html;
 
-import 'canvas_to_image_web.dart';
-import 'color_selector.dart';
-import 'controller.dart';
+import '../canvas_to_image_web.dart';
+import '../controller.dart';
 
 class Appbar extends StatefulWidget {
   final GraphController controller;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quiver/time.dart';
 
-import '../color_selector.dart';
+import 'color_selector.dart';
 import '../controller.dart';
 import '../model.dart';
 

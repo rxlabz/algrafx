@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:quiver/time.dart';
 
 import 'appbar.dart' as rx;
-import 'controller.dart';
-import 'model.dart';
+import '../controller.dart';
+import '../model.dart';
 
 class GraphScreen extends StatelessWidget {
   final GraphController controller;
